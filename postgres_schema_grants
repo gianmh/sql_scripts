@@ -1,0 +1,26 @@
+GRANT CONNECT ON DATABASE osm TO testg; --change db
+
+do
+$$
+declare
+  l_row record;
+  l_sql text;
+  l_username text := 'testg'; -- change username here
+    
+  
+begin  
+  for l_row in select schema_name
+               from information_schema.schemata
+               where schema_name not in ('pg_catalog', 'information_schema','tiger','topology')
+                 and schema_name not like 'pg_temp%'
+  loop
+    l_sql := format('grant select on all tables in schema %I to %I', l_row.schema_name::text, l_username);
+    raise notice '%', l_sql; -- for debugging purpose
+    execute l_sql;
+    l_sql := format('alter default privileges in schema %I grant select on tables to %I', l_row.schema_name::text, l_username);
+    raise notice '%', l_sql; -- for debugging purpose
+    execute l_sql;
+  end loop;                  
+end;    
+$$
+;  
